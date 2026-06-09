@@ -1,0 +1,28 @@
+{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "YOUR_GITHUB_PAT"
+      }
+    },
+    "jira": {
+      "command": "npx",
+      "args": ["-y", "@sooperset/mcp-atlassian"],
+      "env": {
+        "JIRA_URL": "https://YOUR-ORG.atlassian.net",
+        "JIRA_USERNAME": "your.email@yourorg.com",
+        "JIRA_API_TOKEN": "YOUR_JIRA_API_TOKEN"
+      }
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "C:\\Users\\YOUR_USERNAME\\data-engineer-demo"
+      ]
+    }
+  }
+}

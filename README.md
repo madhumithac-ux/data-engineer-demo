@@ -1,0 +1,176 @@
+# AI Data Engineer Agent — Demo Project
+
+An autonomous Claude Code agent that reads a Jira ticket, generates
+Snowflake SQL and validation tests, then opens a GitHub draft PR and
+comments the PR link back on Jira.
+
+**No database connection required.** All tests run locally.
+
+---
+
+## How it works
+
+```
+$data-engineer DE-42
+      │
+      ▼
+ jira-reader      reads ticket via Jira MCP
+      │            extracts: table, columns, procedure, row count, query tag
+      ▼
+ code-generator   writes src/sql/*.sql via Filesystem MCP
+      │            writes tests/test_*.py via Filesystem MCP
+      ▼
+ pr-creator       creates branch + commits files via GitHub MCP
+                   opens draft PR
+                   comments PR link on Jira ticket
+```
+
+---
+
+## Quick start
+
+### Step 1 — Install tools
+
+```powershell
+# Install Claude Code
+npm install -g @anthropic-ai/claude-code
+
+# Install MCP servers
+npm install -g @modelcontextprotocol/server-github
+npm install -g @sooperset/mcp-atlassian
+npm install -g @modelcontextprotocol/server-filesystem
+
+# Authenticate GitHub CLI
+gh auth login
+```
+
+### Step 2 — Configure MCP servers
+
+Copy the MCP config template to the Claude config location:
+
+```powershell
+# Open the Claude config file
+code $env:APPDATA\Claude\claude_desktop_config.json
+```
+
+Copy the contents of `.claude/config/mcp.template.json` into that file
+and replace the 5 placeholders:
+- `YOUR_GITHUB_PAT` — https://github.com/settings/tokens (needs `repo` scope)
+- `YOUR-ORG` — your Atlassian org name
+- `your.email@yourorg.com` — your Jira login email
+- `YOUR_JIRA_API_TOKEN` — https://id.atlassian.com/manage-profile/security/api-tokens
+- `YOUR_USERNAME` — your Windows username (for the filesystem path)
+
+### Step 3 — Configure project defaults
+
+```powershell
+copy .claude\config\defaults.template.json .claude\config\defaults.json
+code .claude\config\defaults.json
+```
+
+Fill in your name, GitHub username, repo name, and Jira details.
+
+### Step 4 — Set up GitHub repo
+
+```powershell
+git init
+git branch -M main
+gh repo create data-engineer-demo --public --source=. --remote=origin
+git add .
+git commit -m "Initial project setup"
+git push -u origin main
+```
+
+### Step 5 — Run the agent
+
+```powershell
+# Verify MCP servers are connected
+claude mcp list
+
+# Start Claude Code
+claude
+
+# Inside Claude Code, run the pipeline
+$data-engineer YOUR-TICKET-ID
+```
+
+---
+
+## Project structure
+
+```
+data-engineer-demo/
+├── CLAUDE.md                              ← project context for the agent
+├── README.md                              ← this file
+├── requirements.txt                       ← pytest dependency
+├── .gitignore
+├── .claude/
+│   ├── skills/
+│   │   └── data-engineer/
+│   │       └── SKILL.md                  ← main orchestrator
+│   ├── agents/
+│   │   ├── jira-reader.md                ← reads Jira ticket
+│   │   ├── code-generator.md             ← generates SQL + tests
+│   │   └── pr-creator.md                 ← commits + opens PR
+│   └── config/
+│       ├── defaults.template.json        ← copy → defaults.json and fill in
+│       └── mcp.template.json             ← copy to %APPDATA%\Claude\
+├── src/
+│   └── sql/                              ← generated SQL files land here
+│       └── de42_ai_agent_test_table_2.sql  ← example output
+└── tests/                                ← generated test files land here
+    └── test_de42_ai_agent_test_table_2.py  ← example output
+```
+
+---
+
+## Running the example tests (no Jira or GitHub needed)
+
+The repo includes example generated files so you can run tests immediately:
+
+```powershell
+pip install pytest
+pytest tests/ -v
+```
+
+Expected output:
+```
+tests/test_de42_ai_agent_test_table_2.py::test_sql_file_was_generated        PASSED
+tests/test_de42_ai_agent_test_table_2.py::test_table_ddl_present             PASSED
+tests/test_de42_ai_agent_test_table_2.py::test_procedure_ddl_present         PASSED
+tests/test_de42_ai_agent_test_table_2.py::test_all_columns_present           PASSED
+tests/test_de42_ai_agent_test_table_2.py::test_correct_column_types          PASSED
+tests/test_de42_ai_agent_test_table_2.py::test_exactly_10_rows_inserted      PASSED
+tests/test_de42_ai_agent_test_table_2.py::test_query_tag_present             PASSED
+tests/test_de42_ai_agent_test_table_2.py::test_query_tag_is_set_and_cleared  PASSED
+tests/test_de42_ai_agent_test_table_2.py::test_no_unsafe_drop_statements     PASSED
+tests/test_de42_ai_agent_test_table_2.py::test_validation_queries_are_commented PASSED
+
+10 passed in 0.12s
+```
+
+---
+
+## Writing good Jira tickets for this agent
+
+The more specific your ticket, the better the generated code. Include:
+
+- **Table name** and exact **column names + data types**
+- **Procedure name** and what it should do (e.g. "insert exactly 10 rows")
+- **Query tag** for observability (e.g. `MY_PROC_TAG`)
+- **Acceptance criteria** as bullet points
+- **Schema** and **database** names
+
+See the sample ticket in `docs/sample-ticket.md` for a perfect example.
+
+---
+
+## Troubleshooting
+
+| Problem | Fix |
+|---------|-----|
+| `claude mcp list` shows servers missing | Re-check `%APPDATA%\Claude\claude_desktop_config.json` |
+| Jira connection fails | Verify `JIRA_URL`, `JIRA_USERNAME`, `JIRA_API_TOKEN` in MCP config |
+| GitHub push fails | Run `gh auth login` and re-check `GITHUB_PERSONAL_ACCESS_TOKEN` |
+| `defaults.json` not found | Copy `defaults.template.json` → `defaults.json` and fill in values |
+| Tests fail | Check that `src/sql/` contains the expected `.sql` file |
