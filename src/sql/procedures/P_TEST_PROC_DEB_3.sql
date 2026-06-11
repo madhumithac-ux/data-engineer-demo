@@ -24,7 +24,7 @@ DECLARE
     rows_inserted NUMBER := 0;
 BEGIN
     -- Set query tag for observability in Snowflake query history
-    CALL SYSTEM$SET_QUERY_TAG(''DEB-3_P_TEST_PROC_DEB_3'');
+    ALTER SESSION SET QUERY_TAG = ''AI_AGENT_POPULATION_PROC'';
 
     INSERT INTO RAW.TEST_TABLE_DEB_3 (ID, Name, Amount)
     VALUES
@@ -33,16 +33,16 @@ BEGIN
         (3,  ''Charlie'', 320.00),
         (4,  ''Diana'',   415.25),
         (5,  ''Eve'',     530.80),
-        (6,  ''Frank'',   670.40),
+        (6,  ''Frank'',   620.40),
         (7,  ''Grace'',   785.60),
         (8,  ''Hank'',    890.15),
-        (9,  ''Ivy'',     945.30),
-        (10, ''Jack'',    999.99);
+        (9,  ''Ivy'',     945.90),
+        (10, ''Jack'',    1075.35);
 
     rows_inserted := 10;
 
     -- Clear query tag
-    CALL SYSTEM$SET_QUERY_TAG('''');
+    ALTER SESSION SET QUERY_TAG = '';
 
     RETURN ''Success: '' || rows_inserted || '' rows inserted into TEST_TABLE_DEB_3'';
 END;
@@ -58,9 +58,12 @@ END;
 -- 2. Call the procedure
 --    CALL RAW.P_TEST_PROC_DEB_3();
 
--- 3. Verify query tag in history
+-- 3. Verify row count after calling procedure
+--    SELECT COUNT(*) FROM RAW.TEST_TABLE_DEB_3;
+
+-- 4. Verify query tag in history
 --    SELECT query_id, query_text, query_tag
 --    FROM TABLE(INFORMATION_SCHEMA.QUERY_HISTORY())
---    WHERE query_tag = ''DEB-3_P_TEST_PROC_DEB_3''
+--    WHERE query_tag = ''AI_AGENT_POPULATION_PROC''
 --    ORDER BY start_time DESC
 --    LIMIT 10;

@@ -15,7 +15,7 @@ USE SCHEMA RAW;
 -- ----------------------------------------------------------------
 -- Table definition
 -- ----------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS DEV_SECREFTEST_DB.RAW.TEST_TABLE_DEB_3 (
+CREATE OR REPLACE TABLE DEV_SECREFTEST_DB.RAW.TEST_TABLE_DEB_3 (
     ID       INT,
     Name     VARCHAR(255),
     Amount   FLOAT

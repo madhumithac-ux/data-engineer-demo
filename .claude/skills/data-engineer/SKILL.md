@@ -30,9 +30,10 @@ It will return a structured handoff JSON block.
 
 ## Phase 2 — code-generator agent
 Spawn the `code-generator` agent with the handoff JSON from Phase 1.
-It will write two files using the filesystem MCP:
-- src/sql/<ticket_id>_<object_name>.sql
-- tests/test_<ticket_id>_<object_name>.py
+It will write three files using the filesystem MCP:
+- src/sql/tables/<EXACT_TABLE_NAME>.sql
+- src/sql/procedures/<EXACT_PROCEDURE_NAME>.sql
+- tests/test_<EXACT_TABLE_NAME>.py
 
 ## Phase 3 — test-runner agent
 Spawn the `test-runner` agent with the handoff JSON from Phase 2.
@@ -74,8 +75,9 @@ This block is passed between all agents:
     "<criterion 1 from ticket>",
     "<criterion 2 from ticket>"
   ],
-  "sql_filename": "src/sql/<ticket_id_lower>_<object_name_lower>.sql",
-  "test_filename": "tests/test_<ticket_id_lower>_<object_name_lower>.py",
+  "table_sql_filename": "src/sql/tables/<EXACT_TABLE_NAME>.sql",
+  "procedure_sql_filename": "src/sql/procedures/<EXACT_PROCEDURE_NAME>.sql",
+  "test_filename": "tests/test_<EXACT_TABLE_NAME>.py",
   "author": "<from defaults.json>",
   "github_owner": "<from defaults.json>",
   "github_repo": "<from defaults.json>",

@@ -12,16 +12,19 @@ pr-creator must NOT run until all tests pass.
 
 ## What you receive
 The handoff JSON from code-generator, including:
-- test_filename  — path to the pytest file (e.g. tests/test_de42_....py)
-- sql_filename   — path to the SQL file being tested
-- ticket_id      — for reporting
-- acceptance_criteria — so you can map failures back to ticket requirements
+- test_filename           — path to the pytest file
+- table_sql_filename      — path to the table DDL SQL file
+- procedure_sql_filename  — path to the procedure SQL file
+- ticket_id               — for reporting
+- acceptance_criteria     — so you can map failures back to ticket requirements
 
 ## Step 1 — confirm files exist
-Before running anything, check both files exist on disk using
+Before running anything, check all three files exist on disk using
 the `filesystem` MCP `read_file` tool:
-- Read sql_filename — if missing, stop and report:
-  "SQL file not found: {sql_filename}. code-generator may have failed."
+- Read table_sql_filename — if missing, stop and report:
+  "Table SQL file not found: {table_sql_filename}. code-generator may have failed."
+- Read procedure_sql_filename — if missing, stop and report:
+  "Procedure SQL file not found: {procedure_sql_filename}. code-generator may have failed."
 - Read test_filename — if missing, stop and report:
   "Test file not found: {test_filename}. code-generator may have failed."
 
@@ -94,7 +97,7 @@ Full output:
 {full pytest output}
 
 Pipeline status: BLOCKED — do not run pr-creator.
-Action required: Fix the issue in {sql_filename} or {test_filename},
+Action required: Fix the issue in the relevant SQL or test file,
 then re-run $data-engineer {ticket_id}.
 ```
 

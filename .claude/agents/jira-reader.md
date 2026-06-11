@@ -19,11 +19,17 @@ Pass the full ticket ID, e.g. "DE-42" or "DEB-12345".
 ## Step 2 — extract technical details
 From the ticket response, extract:
 
-**Database objects:**
-- Table names (look for: CREATE TABLE, table name, schema references)
-- Column definitions (name + data type for every column)
-- Procedure names (look for: stored procedure, CALL, procedure name)
+**Database objects — COPY NAMES VERBATIM:**
+- Table name: copy character-by-character exactly as it appears in the ticket
+  (look for backtick-formatted names like `AI_AGENT_TEST_TABLE_2`, or a "Table name" field)
+- Procedure name: copy exactly as it appears (look for "Procedure name" field or backtick names)
+- Column definitions: name + data type for every column
 - View names if any
+
+⚠️ CRITICAL: NEVER invent, abbreviate, derive, or guess object names.
+If the ticket says `AI_AGENT_TEST_TABLE_2`, use `AI_AGENT_TEST_TABLE_2` — not `TEST_TABLE_DEB_3`,
+not `TABLE_DEB_3`, not anything else. Copy it exactly. If you cannot find the name clearly
+stated in the ticket, set it to null and note it — do not make one up.
 
 **Behavior requirements:**
 - Exact row count to insert (e.g. "insert exactly 10 rows")
@@ -41,11 +47,17 @@ From the ticket response, extract:
 - These become both SQL validation comments AND pytest assertions
 
 ## Step 3 — build filenames
-Use this naming convention:
-- ticket_id lowercase with underscore: DE-42 → de42
-- object name lowercase with underscore: AI_AGENT_TEST_TABLE_2 → ai_agent_test_table_2
-- sql_filename:  src/sql/de42_ai_agent_test_table_2.sql
-- test_filename: tests/test_de42_ai_agent_test_table_2.py
+Filenames use the EXACT object name from the ticket — same casing, no ticket prefix.
+The folder (tables/ or procedures/) already provides the context.
+
+- table_sql_filename:     src/sql/tables/<EXACT_TABLE_NAME>.sql
+- procedure_sql_filename: src/sql/procedures/<EXACT_PROCEDURE_NAME>.sql
+- test_filename:          tests/test_<EXACT_TABLE_NAME>.py
+
+Examples (if ticket says AI_AGENT_TEST_TABLE_2 and P_FILL_AI_AGENT_TEST_TABLE_2):
+- table_sql_filename:     src/sql/tables/AI_AGENT_TEST_TABLE_2.sql
+- procedure_sql_filename: src/sql/procedures/P_FILL_AI_AGENT_TEST_TABLE_2.sql
+- test_filename:          tests/test_AI_AGENT_TEST_TABLE_2.py
 
 ## Step 4 — output the handoff JSON
 Output ONLY this JSON block — the next agent parses it directly:
@@ -71,8 +83,9 @@ Output ONLY this JSON block — the next agent parses it directly:
     "<criterion 2>",
     "<criterion 3>"
   ],
-  "sql_filename": "src/sql/<ticket_slug>_<object_slug>.sql",
-  "test_filename": "tests/test_<ticket_slug>_<object_slug>.py",
+  "table_sql_filename": "src/sql/tables/<EXACT_TABLE_NAME>.sql",
+  "procedure_sql_filename": "src/sql/procedures/<EXACT_PROCEDURE_NAME>.sql",
+  "test_filename": "tests/test_<EXACT_TABLE_NAME>.py",
   "author": "<from defaults.json>",
   "github_owner": "<from defaults.json>",
   "github_repo": "<from defaults.json>",
@@ -93,8 +106,11 @@ Name VARCHAR, Amount FLOAT. Procedure P_FILL_AI_AGENT_TEST_TABLE_2
 must insert exactly 10 rows tagged AI_AGENT_POPULATION_PROC."
 
 The output JSON would have:
-- table_name: "AI_AGENT_TEST_TABLE_2"
-- columns: [{name:"ID",type:"INT"},{name:"Name",type:"VARCHAR"},{name:"Amount",type:"FLOAT"}]
-- procedure_name: "P_FILL_AI_AGENT_TEST_TABLE_2"
+- table_name: "AI_AGENT_TEST_TABLE_2"          ← copied verbatim from ticket
+- procedure_name: "P_FILL_AI_AGENT_TEST_TABLE_2" ← copied verbatim from ticket
+- columns: [{"name":"ID","type":"INT"},{"name":"Name","type":"VARCHAR"},{"name":"Amount","type":"FLOAT"}]
 - row_count: 10
 - query_tag: "AI_AGENT_POPULATION_PROC"
+- table_sql_filename: "src/sql/tables/AI_AGENT_TEST_TABLE_2.sql"
+- procedure_sql_filename: "src/sql/procedures/P_FILL_AI_AGENT_TEST_TABLE_2.sql"
+- test_filename: "tests/test_AI_AGENT_TEST_TABLE_2.py"
