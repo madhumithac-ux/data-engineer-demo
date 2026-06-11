@@ -15,7 +15,7 @@ USE SCHEMA RAW;
 -- ----------------------------------------------------------------
 -- Population procedure
 -- ----------------------------------------------------------------
-CREATE OR REPLACE PROCEDURE RAW.P_TEST_PROC_DEB_3()
+CREATE OR REPLACE PROCEDURE DEV_SECREFTEST_DB.RAW.P_TEST_PROC_DEB_3()
 RETURNS VARCHAR
 LANGUAGE SQL
 EXECUTE AS CALLER
@@ -23,6 +23,9 @@ AS '
 DECLARE
     rows_inserted NUMBER := 0;
 BEGIN
+    -- Set query tag for observability in Snowflake query history
+    CALL SYSTEM$SET_QUERY_TAG(''DEB-3_P_TEST_PROC_DEB_3'');
+
     INSERT INTO RAW.TEST_TABLE_DEB_3 (ID, Name, Amount)
     VALUES
         (1,  ''Alice'',   100.50),
@@ -30,13 +33,16 @@ BEGIN
         (3,  ''Charlie'', 320.00),
         (4,  ''Diana'',   415.25),
         (5,  ''Eve'',     530.80),
-        (6,  ''Frank'',   620.40),
+        (6,  ''Frank'',   670.40),
         (7,  ''Grace'',   785.60),
         (8,  ''Hank'',    890.15),
-        (9,  ''Ivy'',     945.90),
-        (10, ''Jack'',    1075.35);
+        (9,  ''Ivy'',     945.30),
+        (10, ''Jack'',    999.99);
 
     rows_inserted := 10;
+
+    -- Clear query tag
+    CALL SYSTEM$SET_QUERY_TAG('''');
 
     RETURN ''Success: '' || rows_inserted || '' rows inserted into TEST_TABLE_DEB_3'';
 END;
@@ -52,11 +58,9 @@ END;
 -- 2. Call the procedure
 --    CALL RAW.P_TEST_PROC_DEB_3();
 
--- 3. Verify row count after calling procedure
---    SELECT COUNT(*) FROM RAW.TEST_TABLE_DEB_3;
-
--- 4. Inspect query history
---    SELECT query_id, query_text
+-- 3. Verify query tag in history
+--    SELECT query_id, query_text, query_tag
 --    FROM TABLE(INFORMATION_SCHEMA.QUERY_HISTORY())
+--    WHERE query_tag = ''DEB-3_P_TEST_PROC_DEB_3''
 --    ORDER BY start_time DESC
 --    LIMIT 10;
