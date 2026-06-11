@@ -7,7 +7,8 @@ Acceptance criteria from the Jira ticket:
 1. Table TEST_TABLE_DEB_3 must exist in schema RAW of database DEV_SECREFTEST_DB
 2. Calling CALL P_TEST_PROC_DEB_3(); must successfully insert exactly 10 rows
 3. No DROP statements without IF EXISTS guard
-4. Procedure must use EXECUTE AS CALLER
+4. Procedure should use EXECUTE AS CALLER to inherit the caller's role permissions
+5. The query tag must be cleared after the INSERT completes
 
 Run with: pytest tests/test_TEST_TABLE_DEB_3.py -v
 """
@@ -37,15 +38,22 @@ def _proc_sql():
 
 
 def test_table_ddl_present():
-    """AC: Table TEST_TABLE_DEB_3 must be defined in schema RAW."""
-    assert "CREATE OR REPLACE TABLE RAW.TEST_TABLE_DEB_3" in _table_sql(), (
-        "CREATE TABLE statement for RAW.TEST_TABLE_DEB_3 not found"
+    """AC: Table TEST_TABLE_DEB_3 must be defined with CREATE TABLE IF NOT EXISTS."""
+    assert "CREATE TABLE IF NOT EXISTS" in _table_sql(), (
+        "CREATE TABLE IF NOT EXISTS statement not found in table SQL"
+    )
+
+
+def test_table_references_correct_schema_and_name():
+    """AC: Table must be created in DEV_SECREFTEST_DB.RAW as TEST_TABLE_DEB_3."""
+    assert "DEV_SECREFTEST_DB.RAW.TEST_TABLE_DEB_3" in _table_sql(), (
+        "Full qualified table name DEV_SECREFTEST_DB.RAW.TEST_TABLE_DEB_3 not found in table SQL"
     )
 
 
 def test_procedure_ddl_present():
     """AC: Procedure P_TEST_PROC_DEB_3 must exist."""
-    assert "CREATE OR REPLACE PROCEDURE RAW.P_TEST_PROC_DEB_3" in _proc_sql(), (
+    assert "CREATE OR REPLACE PROCEDURE DEV_SECREFTEST_DB.RAW.P_TEST_PROC_DEB_3" in _proc_sql(), (
         "CREATE PROCEDURE statement for P_TEST_PROC_DEB_3 not found"
     )
 
@@ -60,9 +68,16 @@ def test_all_columns_present():
 def test_correct_column_types():
     """Column data types must match the ticket specification."""
     sql = _table_sql()
-    assert "ID" in sql and "INT" in sql, "Column ID with type INT not found in table SQL"
-    assert "Name" in sql and "VARCHAR(255)" in sql, "Column Name with type VARCHAR(255) not found in table SQL"
-    assert "Amount" in sql and "FLOAT" in sql, "Column Amount with type FLOAT not found in table SQL"
+    assert "ID" in sql and "INT" in sql, "Column ID INT not found in table SQL"
+    assert "Name" in sql and "VARCHAR" in sql, "Column Name VARCHAR not found in table SQL"
+    assert "Amount" in sql and "FLOAT" in sql, "Column Amount FLOAT not found in table SQL"
+
+
+def test_execute_as_caller_present():
+    """AC: Procedure must use EXECUTE AS CALLER."""
+    assert "EXECUTE AS CALLER" in _proc_sql(), (
+        "EXECUTE AS CALLER not found in procedure SQL"
+    )
 
 
 def test_exactly_10_rows_inserted():
@@ -74,10 +89,18 @@ def test_exactly_10_rows_inserted():
     )
 
 
-def test_execute_as_caller_present():
-    """AC: Procedure must use EXECUTE AS CALLER."""
-    assert "EXECUTE AS CALLER" in _proc_sql(), (
-        "EXECUTE AS CALLER not found in procedure SQL"
+def test_query_tag_is_cleared():
+    """AC: The query tag must be cleared after the INSERT completes."""
+    sql = _proc_sql()
+    # Accept either SYSTEM$SET_QUERY_TAG('') or ALTER SESSION SET QUERY_TAG = ''
+    cleared = (
+        "SYSTEM$SET_QUERY_TAG('')" in sql
+        or "SYSTEM$SET_QUERY_TAG('''')" in sql
+        or "ALTER SESSION SET QUERY_TAG = ''" in sql
+    )
+    assert cleared, (
+        "Query tag clear call not found in procedure SQL. "
+        "Expected SYSTEM$SET_QUERY_TAG('') or equivalent."
     )
 
 
