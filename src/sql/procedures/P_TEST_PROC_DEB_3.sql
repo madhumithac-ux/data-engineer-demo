@@ -15,7 +15,7 @@ USE SCHEMA RAW;
 -- ----------------------------------------------------------------
 -- Population procedure
 -- ----------------------------------------------------------------
-CREATE OR REPLACE PROCEDURE DEV_SECREFTEST_DB.RAW.P_TEST_PROC_DEB_3()
+CREATE OR REPLACE PROCEDURE RAW.P_TEST_PROC_DEB_3()
 RETURNS VARCHAR
 LANGUAGE SQL
 EXECUTE AS CALLER
@@ -23,9 +23,6 @@ AS '
 DECLARE
     rows_inserted NUMBER := 0;
 BEGIN
-    -- Set query tag for observability in Snowflake query history
-    ALTER SESSION SET QUERY_TAG = ''AI_AGENT_POPULATION_PROC'';
-
     INSERT INTO RAW.TEST_TABLE_DEB_3 (ID, Name, Amount)
     VALUES
         (1,  ''Alice'',   100.50),
@@ -40,9 +37,6 @@ BEGIN
         (10, ''Jack'',    1075.35);
 
     rows_inserted := 10;
-
-    -- Clear query tag
-    ALTER SESSION SET QUERY_TAG = '';
 
     RETURN ''Success: '' || rows_inserted || '' rows inserted into TEST_TABLE_DEB_3'';
 END;
@@ -64,6 +58,5 @@ END;
 -- 4. Verify query tag in history
 --    SELECT query_id, query_text, query_tag
 --    FROM TABLE(INFORMATION_SCHEMA.QUERY_HISTORY())
---    WHERE query_tag = ''AI_AGENT_POPULATION_PROC''
 --    ORDER BY start_time DESC
 --    LIMIT 10;
