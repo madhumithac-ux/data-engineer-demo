@@ -1,6 +1,6 @@
 ---
 name: pr-creator
-description: Creates a GitHub feature branch, commits the generated SQL and test files, opens a draft PR via GitHub MCP, then posts the PR link as a comment on the Jira ticket.
+description: Commits and pushes the generated SQL and test files via git, opens a draft PR via GitHub MCP, then posts the PR link as a comment on the Jira ticket and transitions its status.
 model: sonnet
 ---
 
@@ -23,39 +23,18 @@ Also read the handoff JSON passed from the orchestrator for:
 - test_results.total, test_results.passed, test_results.duration_seconds
   (used in PR body as: `{n}/{n} tests passed in {duration}s`)
 
-## Step 2 — create feature branch
-Use the `github` MCP tool to create a new branch.
-Look for tool names: `mcp__github__create_branch`, `create_branch`, `github_create_branch`
+## Step 2 — commit and push to GitHub
+The feature branch already exists locally with the generated files (created in Phase 1.8).
+Use the `bash` tool to stage all three files, make one atomic commit, and push:
 
-- Branch name: feature/{ticket_id}
-  Example: feature/DE-42
-- Base branch: value of default_branch from config
+```bash
+cd {project_root} && git add {table_sql_filename} {procedure_sql_filename} {test_filename} && git commit -m "[{ticket_id}] {ticket_title}" && git push -u origin feature/{ticket_id}
+```
 
-If the branch already exists, continue — do not fail.
+If push fails due to authentication → stop and report: "Push failed — check GITHUB_PERSONAL_ACCESS_TOKEN and run `gh auth login`"
+If push fails due to a remote conflict → report the conflict and stop.
 
-## Step 3 — read generated files
-Use the built-in `Read` tool to read all three file contents:
-- Read table_sql_filename      (e.g. src/sql/tables/AI_AGENT_TEST_TABLE_2.sql)
-- Read procedure_sql_filename  (e.g. src/sql/procedures/P_FILL_AI_AGENT_TEST_TABLE_2.sql)
-- Read test_filename           (e.g. tests/test_AI_AGENT_TEST_TABLE_2.py)
-
-## Step 4 — commit files to GitHub
-Use the `github` MCP tool (`mcp__github__create_or_update_file` or `create_or_update_file`).
-Commit each file one at a time in this order:
-
-1. table_sql_filename
-2. procedure_sql_filename
-3. test_filename
-
-For each file:
-- owner: github_owner
-- repo: github_repo
-- branch: feature/{ticket_id}
-- path: the file path
-- content: file content from Step 3
-- message: `[{ticket_id}] {ticket_title}`
-
-## Step 5 — open or update draft PR
+## Step 3 — open or update draft PR
 First check if a PR already exists for `feature/{ticket_id}` using
 `mcp__github__list_pull_requests` (state: open, head: feature/{ticket_id}).
 
@@ -123,7 +102,7 @@ Run locally: `pytest {test_filename} -v`
 *Generated with [Claude Code](https://claude.ai/claude-code) + MCP*
 ```
 
-## Step 6 — comment PR link on Jira
+## Step 4 — comment PR link on Jira
 Use the `jira` MCP tool to post a comment on the ticket.
 Look for tool names: `add_comment`, `jira_add_comment`, `create_comment`
 
@@ -142,7 +121,7 @@ Branch: feature/{ticket_id}
 Status: Ready for review — tests pass locally without DB connection.
 ```
 
-## Step 7 — transition Jira status to "Peer Review"
+## Step 5 — transition Jira status to "Peer Review"
 Use the `jira` MCP tool to move the ticket to Peer Review status.
 
 First, fetch available transitions:
@@ -157,7 +136,7 @@ Then execute the transition:
 If "Peer Review" transition is not found, try: "In Review", "Review", "Code Review".
 If none match, report which transitions are available and skip this step — do not block.
 
-## Step 8 — assign Jira ticket to the author
+## Step 6 — assign Jira ticket to the author
 Use the `jira` MCP tool to assign the ticket to the person who ran the skill.
 
 - Use `mcp__jira__jira_issues` with action `assign`
@@ -166,7 +145,7 @@ Use the `jira` MCP tool to assign the ticket to the person who ran the skill.
 
 If the assign call fails (user not found), report it but do not block — PR is already created.
 
-## Step 9 — final report
+## Step 7 — final report
 Print a clean summary:
 
 ```
@@ -181,11 +160,13 @@ Files   : {table_sql_filename}
 Jira    : Comment posted on {ticket_id}
           Status → Peer Review
           Assigned → {author}
+
+Next    : Run `git checkout main` to return to the main branch
 ```
 
 ## Error handling
-- Branch creation fails (already exists) → continue, do not stop
-- File commit fails → report which file failed and the exact error, stop
+- git commit fails → report the exact error and stop
+- git push fails → report error, provide manual push command: `git push -u origin feature/{ticket_id}`
 - PR creation fails → report error, provide manual URL:
   https://github.com/{github_owner}/{github_repo}/compare/main...feature/{ticket_id}
 - PR update (body/stale file cleanup) fails → report but do not block

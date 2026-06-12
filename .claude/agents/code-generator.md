@@ -155,8 +155,10 @@ Run with: pytest {test_filename} -v
 from pathlib import Path
 import re
 
-TABLE_SQL_FILE = Path("{table_sql_filename}").resolve()
-PROCEDURE_SQL_FILE = Path("{procedure_sql_filename}").resolve()
+# Paths are relative to this test file's location so they work on any machine
+_ROOT = Path(__file__).resolve().parent.parent
+TABLE_SQL_FILE = _ROOT / "{table_sql_filename}"
+PROCEDURE_SQL_FILE = _ROOT / "{procedure_sql_filename}"
 
 
 def test_table_sql_file_exists():

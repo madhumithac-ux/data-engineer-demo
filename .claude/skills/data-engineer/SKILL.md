@@ -39,6 +39,22 @@ Before spawning code-generator, verify the handoff JSON from Phase 1 contains:
 If any required field is null or missing, stop and report which field is missing.
 Do NOT continue to code-generator with an incomplete handoff.
 
+## Phase 1.8 — create local branch and directories
+Use the `bash` tool to set up the working environment before any files are written:
+
+1. Create the feature branch (or switch to it if it already exists):
+```bash
+cd {project_root} && git checkout -b feature/{ticket_id} 2>/dev/null || git checkout feature/{ticket_id}
+```
+If the branch already existed, warn the user that previously generated files may be present.
+
+2. Ensure all output directories exist:
+```bash
+cd {project_root} && mkdir -p src/sql/tables src/sql/procedures tests
+```
+
+If either command fails, stop and report the error — do not continue to Phase 2.
+
 ## Phase 2 — code-generator agent
 Spawn the `code-generator` agent with the handoff JSON from Phase 1.
 It will write three files using the built-in Write tool:
