@@ -82,7 +82,7 @@ This block is passed between all agents:
     {"name": "<col1>", "type": "<TYPE>"},
     {"name": "<col2>", "type": "<TYPE>"}
   ],
-  "row_count": "<row count from ticket, default 5>",
+  "row_count": 5,
   "query_tag": "<query tag from ticket>",
   "acceptance_criteria": [
     "<criterion 1 from ticket>",

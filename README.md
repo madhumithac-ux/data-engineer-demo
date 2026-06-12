@@ -136,16 +136,21 @@ pytest tests/ -v
 
 Expected output (example for ticket DEB-42):
 ```
-tests/test_MY_TABLE.py::test_table_ddl_present             PASSED
-tests/test_MY_TABLE.py::test_procedure_ddl_present         PASSED
-tests/test_MY_TABLE.py::test_all_columns_present           PASSED
-tests/test_MY_TABLE.py::test_correct_column_types          PASSED
-tests/test_MY_TABLE.py::test_exactly_10_rows_inserted      PASSED
-tests/test_MY_TABLE.py::test_query_tag_present             PASSED
-tests/test_MY_TABLE.py::test_query_tag_is_set_and_cleared  PASSED
-tests/test_MY_TABLE.py::test_no_unsafe_drop_statements     PASSED
+tests/test_MY_TABLE.py::test_table_sql_file_exists              PASSED
+tests/test_MY_TABLE.py::test_procedure_sql_file_exists          PASSED
+tests/test_MY_TABLE.py::test_table_ddl_present                  PASSED
+tests/test_MY_TABLE.py::test_procedure_ddl_present              PASSED
+tests/test_MY_TABLE.py::test_all_columns_present                PASSED
+tests/test_MY_TABLE.py::test_correct_column_types               PASSED
+tests/test_MY_TABLE.py::test_exactly_10_rows_inserted           PASSED
+tests/test_MY_TABLE.py::test_query_tag_present                  PASSED
+tests/test_MY_TABLE.py::test_query_tag_is_set_and_cleared       PASSED
+tests/test_MY_TABLE.py::test_no_unsafe_drop_in_table_sql        PASSED
+tests/test_MY_TABLE.py::test_no_unsafe_drop_in_procedure_sql    PASSED
+tests/test_MY_TABLE.py::test_table_validation_queries_present   PASSED
+tests/test_MY_TABLE.py::test_procedure_validation_queries_present PASSED
 
-8 passed in 0.12s
+13 passed in 0.12s
 ```
 
 ---
@@ -169,7 +174,7 @@ See the sample ticket in `docs/sample-ticket.md` for a perfect example.
 | Problem | Fix |
 |---------|-----|
 | `claude mcp list` shows servers missing | Re-check `%APPDATA%\Claude\claude_desktop_config.json` |
-| Jira connection fails | Verify `JIRA_URL`, `JIRA_USERNAME`, `JIRA_API_TOKEN` in MCP config |
+| Jira connection fails | Verify `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN` in MCP config |
 | GitHub push fails | Run `gh auth login` and re-check `GITHUB_PERSONAL_ACCESS_TOKEN` |
 | `defaults.json` not found | Copy `defaults.template.json` → `defaults.json` and fill in values |
 | Tests fail | Check that `src/sql/` contains the expected `.sql` file |

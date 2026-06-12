@@ -33,9 +33,9 @@ If the branch already exists, continue — do not fail.
 
 ## Step 3 — read generated files
 Use the built-in `Read` tool to read all three file contents:
-- Read table_sql_filename      (e.g. src/sql/tables/deb-3_ai_agent_test_table_2.sql)
-- Read procedure_sql_filename  (e.g. src/sql/procedures/deb-3_p_fill_ai_agent_test_table_2.sql)
-- Read test_filename           (e.g. tests/test_deb-3_ai_agent_test_table_2.py)
+- Read table_sql_filename      (e.g. src/sql/tables/AI_AGENT_TEST_TABLE_2.sql)
+- Read procedure_sql_filename  (e.g. src/sql/procedures/P_FILL_AI_AGENT_TEST_TABLE_2.sql)
+- Read test_filename           (e.g. tests/test_AI_AGENT_TEST_TABLE_2.py)
 
 ## Step 4 — commit files to GitHub
 Use the `github` MCP tool (`mcp__github__create_or_update_file` or `create_or_update_file`).
