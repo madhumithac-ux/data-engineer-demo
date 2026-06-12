@@ -28,6 +28,17 @@ Before starting, do these in order:
 Spawn the `jira-reader` agent with the ticket ID.
 It will return a structured handoff JSON block.
 
+## Phase 1.5 — validate handoff JSON
+Before spawning code-generator, verify the handoff JSON from Phase 1 contains:
+- `table_name` — not null, not empty
+- `procedure_name` — not null, not empty
+- `columns` — non-empty list
+- `row_count` — positive integer
+- `table_sql_filename`, `procedure_sql_filename`, `test_filename` — all set
+
+If any required field is null or missing, stop and report which field is missing.
+Do NOT continue to code-generator with an incomplete handoff.
+
 ## Phase 2 — code-generator agent
 Spawn the `code-generator` agent with the handoff JSON from Phase 1.
 It will write three files using the built-in Write tool:
@@ -42,8 +53,9 @@ It will run pytest on the generated test file and report results.
 IF ANY TEST FAILS:
 - Stop the pipeline immediately
 - Do NOT spawn pr-creator
-- Report the failure to the user with the exact test name and reason
-- Ask the user whether to retry or abort
+- Report the failure with the exact test name and reason
+- Tell the user to fix the issue in the SQL or test file, then re-run `$data-engineer {ticket_id}`
+- Do NOT attempt to automatically re-run code-generator — wait for explicit user instruction
 
 ONLY proceed to Phase 4 if test-runner reports: "Pipeline status: READY"
 

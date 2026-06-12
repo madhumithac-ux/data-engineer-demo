@@ -72,13 +72,8 @@ First check if a PR already exists for `feature/{ticket_id}` using
 - pull_number: the existing PR number
 - body: use the template below
 
-Also delete any stale SQL files from the branch that no longer belong
-(i.e. files under src/sql/ that are NOT table_sql_filename or procedure_sql_filename).
-Use `mcp__github__get_file_contents` to list files under src/sql/ on the branch,
-then for each stale file use `mcp__github__create_or_update_file` with empty content
-and a deletion commit message to remove it:
-- message: `[{ticket_id}] Remove stale SQL file (replaced by split structure)`
-- branch: feature/{ticket_id}
+Do NOT delete other files from the branch — each ticket manages only its own files.
+Leave any other files under src/sql/ untouched; they belong to other tickets.
 
 Use this body template for both create and update:
 

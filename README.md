@@ -38,7 +38,7 @@ npm install -g @anthropic-ai/claude-code
 
 # Install MCP servers
 npm install -g @modelcontextprotocol/server-github
-npm install -g @sooperset/mcp-atlassian
+npm install -g @nexus2520/jira-mcp-server
 npm install -g @modelcontextprotocol/server-filesystem
 
 # Authenticate GitHub CLI
@@ -57,8 +57,8 @@ code $env:APPDATA\Claude\claude_desktop_config.json
 Copy the contents of `.claude/config/mcp.template.json` into that file
 and replace the 5 placeholders:
 - `YOUR_GITHUB_PAT` — https://github.com/settings/tokens (needs `repo` scope)
-- `YOUR-ORG` — your Atlassian org name
-- `your.email@yourorg.com` — your Jira login email
+- `YOUR-ORG.atlassian.net` — your Atlassian org URL (`JIRA_BASE_URL`)
+- `your.email@yourorg.com` — your Jira login email (`JIRA_EMAIL`)
 - `YOUR_JIRA_API_TOKEN` — https://id.atlassian.com/manage-profile/security/api-tokens
 - `YOUR_USERNAME` — your Windows username (for the filesystem path)
 

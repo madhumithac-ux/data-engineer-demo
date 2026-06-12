@@ -10,7 +10,7 @@ You receive the handoff JSON from jira-reader and produce three files.
 Write them using the built-in `Write` tool.
 
 ## File 1 — Table SQL file
-Path: value of `table_sql_filename` from handoff JSON (e.g. src/sql/tables/deb-3_ai_agent_test_table_2.sql)
+Path: value of `table_sql_filename` from handoff JSON (e.g. src/sql/tables/AI_AGENT_TEST_TABLE_2.sql)
 
 ```sql
 -- ================================================================
@@ -53,7 +53,7 @@ CREATE OR REPLACE TABLE {database}.{schema}.{table_name} (
 ---
 
 ## File 2 — Procedure SQL file
-Path: value of `procedure_sql_filename` from handoff JSON (e.g. src/sql/procedures/deb-3_p_fill_ai_agent_test_table_2.sql)
+Path: value of `procedure_sql_filename` from handoff JSON (e.g. src/sql/procedures/P_FILL_AI_AGENT_TEST_TABLE_2.sql)
 
 ```sql
 -- ================================================================
@@ -142,8 +142,8 @@ Run with: pytest {test_filename} -v
 from pathlib import Path
 import re
 
-TABLE_SQL_FILE = Path("{table_sql_filename}")
-PROCEDURE_SQL_FILE = Path("{procedure_sql_filename}")
+TABLE_SQL_FILE = Path("{table_sql_filename}").resolve()
+PROCEDURE_SQL_FILE = Path("{procedure_sql_filename}").resolve()
 
 
 def test_table_sql_file_exists():
@@ -181,22 +181,29 @@ def test_procedure_ddl_present():
 def test_all_columns_present():
     """All columns from the ticket schema must appear in the table SQL."""
     sql = _table_sql()
-    missing = [col for col in ["col1", "col2", "col3"] if col not in sql]  # fill from columns list
+    # Substitute actual column names from handoff JSON columns list
+    # e.g. for columns [{"name":"ID"},{"name":"NAME"},{"name":"AMOUNT"}]:
+    #   missing = [col for col in ["ID", "NAME", "AMOUNT"] if col not in sql]
+    missing = [col for col in ["COL1", "COL2", "COL3"] if col not in sql]
     assert not missing, f"Missing columns in table SQL: {missing}"
 
 
 def test_correct_column_types():
     """Column data types must match the ticket specification."""
     sql = _table_sql()
-    # One assert per column — use re.search to match name + type together on the same line
+    # Generate one assert per column from handoff JSON — substitute actual name + type pairs
+    # e.g. for {"name":"ID","type":"INT"} and {"name":"NAME","type":"VARCHAR"}:
+    #   assert re.search(r"\bID\s+INT\b", sql), "Column ID INT not found in table SQL"
+    #   assert re.search(r"\bNAME\s+VARCHAR\b", sql), "Column NAME VARCHAR not found in table SQL"
     import re
-    assert re.search(r"\bcol1\s+TYPE1\b", sql), "Column col1 TYPE1 not found in table SQL"
-    assert re.search(r"\bcol2\s+TYPE2\b", sql), "Column col2 TYPE2 not found in table SQL"
+    assert re.search(r"\bCOL1\s+TYPE1\b", sql), "Column COL1 TYPE1 not found in table SQL"
+    assert re.search(r"\bCOL2\s+TYPE2\b", sql), "Column COL2 TYPE2 not found in table SQL"
 
 
-def test_exactly_{row_count}_rows_inserted():
+def test_exactly_{row_count}_rows_inserted():  # ← substitute actual integer, e.g. def test_exactly_10_rows_inserted()
     """AC: Procedure must insert exactly {row_count} rows."""
-    rows = re.findall(r"\(\s*\d+\s*,", _proc_sql())
+    # Counts VALUES rows regardless of column types by matching lines of the form ( ... ),
+    rows = re.findall(r"^\s*\(.*\)\s*,?\s*$", _proc_sql(), re.MULTILINE)
     assert len(rows) == {row_count}, (
         f"Expected {row_count} INSERT rows, found {len(rows)}. "
         f"Check VALUES block in {PROCEDURE_SQL_FILE}"
@@ -205,6 +212,8 @@ def test_exactly_{row_count}_rows_inserted():
 
 def test_query_tag_present():
     """AC: INSERT must be tagged with {query_tag} for observability."""
+    # {query_tag} must be the actual tag value from handoff JSON, not the literal placeholder
+    # e.g. assert "AI_AGENT_POPULATION_PROC" in _proc_sql()
     assert "{query_tag}" in _proc_sql(), (
         "Query tag {query_tag} not found in procedure SQL"
     )
@@ -213,6 +222,8 @@ def test_query_tag_present():
 def test_query_tag_is_set_and_cleared():
     """Query tag must be set to {query_tag} before INSERT and cleared after."""
     sql = _proc_sql()
+    # {query_tag} must be the actual tag value from handoff JSON
+    # e.g. assert "ALTER SESSION SET QUERY_TAG = ''AI_AGENT_POPULATION_PROC''" in sql
     assert "ALTER SESSION SET QUERY_TAG = ''{query_tag}''" in sql, \
         "QUERY_TAG {query_tag} not set before INSERT"
     assert "ALTER SESSION SET QUERY_TAG = '';" in sql, \
@@ -246,10 +257,13 @@ def test_procedure_validation_queries_present():
 ```
 
 ## Rules
-- Fill ALL placeholders — no `{curly braces}` left in output files
-- `{python_list_of_column_names}` → actual Python list: `["ID", "Name", "Amount"]`
-- `{one assert per column}` → actual assert statements per column
-- Test function name uses actual row_count integer: `test_exactly_10_rows_inserted`
+- Fill ALL placeholders — no `{curly braces}` left in any output file
+- This applies everywhere: SQL body, Python string literals, assert messages, docstrings, and f-strings
+- `{row_count}` in a function name must become the actual integer — Python names cannot contain `{}`:
+  `def test_exactly_10_rows_inserted():` not `def test_exactly_{row_count}_rows_inserted():`
+- `{query_tag}` inside assert strings must be the actual tag value: `assert "MY_TAG" in _proc_sql()`
+- `["COL1", "COL2", "COL3"]` → actual column name list from handoff JSON: `["ID", "NAME", "AMOUNT"]`
+- Column type asserts → one per column with real name+type: `re.search(r"\bID\s+INT\b", sql)`
 - After writing all three files, output:
   ```
   Files written:

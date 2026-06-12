@@ -1,24 +1,25 @@
 {
   "mcpServers": {
     "github": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@modelcontextprotocol/server-github"],
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "YOUR_GITHUB_PAT"
       }
     },
     "jira": {
-      "command": "npx",
-      "args": ["-y", "@sooperset/mcp-atlassian"],
+      "command": "cmd",
+      "args": ["/c", "npx", "--yes", "@nexus2520/jira-mcp-server"],
       "env": {
-        "JIRA_URL": "https://YOUR-ORG.atlassian.net",
-        "JIRA_USERNAME": "your.email@yourorg.com",
-        "JIRA_API_TOKEN": "YOUR_JIRA_API_TOKEN"
+        "JIRA_EMAIL": "your.email@yourorg.com",
+        "JIRA_API_TOKEN": "YOUR_JIRA_API_TOKEN",
+        "JIRA_BASE_URL": "https://YOUR-ORG.atlassian.net"
       }
     },
     "filesystem": {
-      "command": "npx",
+      "command": "cmd",
       "args": [
+        "/c", "npx",
         "-y",
         "@modelcontextprotocol/server-filesystem",
         "C:\\Users\\YOUR_USERNAME\\data-engineer-demo"
