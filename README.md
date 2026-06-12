@@ -21,8 +21,8 @@ $data-engineer DE-42
       │            writes src/sql/procedures/<PROC>.sql via built-in Write tool
       │            writes tests/test_<TABLE>.py via built-in Write tool
       ▼
- pr-creator       creates branch + commits files via GitHub MCP
-                   opens draft PR
+ pr-creator       git commit + push to feature branch
+                   opens draft PR via GitHub MCP
                    comments PR link on Jira ticket
 ```
 

@@ -18,7 +18,7 @@ Example: `$data-engineer DE-42`
 1. jira-reader    → reads ticket via Jira MCP, extracts requirements
 2. code-generator → writes SQL + pytest file using built-in Write tool
 3. test-runner    → runs pytest locally, blocks pipeline if any test fails
-4. pr-creator     → branch + commit + draft PR via GitHub MCP
+4. pr-creator     → git commit + push, open draft PR via GitHub MCP
                     + comment PR link, transition status, assign ticket on Jira
 
 ## Output files per ticket
@@ -35,7 +35,7 @@ Example: `$data-engineer DE-42`
 
 ## MCP servers required
 - jira   — read tickets, post comments
-- github — create branch, commit files, open draft PR
+- github — open draft PR, comment, list pull requests
 
 ## Config
 All settings in .claude/config/defaults.json (gitignored).
