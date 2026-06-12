@@ -32,12 +32,10 @@ Look for tool names: `create_branch`, `github_create_branch`
 If the branch already exists, continue — do not fail.
 
 ## Step 3 — read generated files
-Use the `filesystem` MCP tool to read all three file contents:
+Use the built-in `Read` tool to read all three file contents:
 - Read table_sql_filename      (e.g. src/sql/tables/deb-3_ai_agent_test_table_2.sql)
 - Read procedure_sql_filename  (e.g. src/sql/procedures/deb-3_p_fill_ai_agent_test_table_2.sql)
 - Read test_filename           (e.g. tests/test_deb-3_ai_agent_test_table_2.py)
-
-Look for filesystem MCP tool names: `mcp__filesystem__read_file` or `read_file`
 
 ## Step 4 — commit files to GitHub
 Use the `github` MCP tool (`mcp__github__create_or_update_file` or `create_or_update_file`).
@@ -68,24 +66,19 @@ First check if a PR already exists for `feature/{ticket_id}` using
 - draft: true
 - body: use the template below
 
-**If a PR already exists** — update its body using the GitHub API via bash:
-```bash
-gh pr edit <pull_number> --repo {github_owner}/{github_repo} --body "<body from template below>"
-```
+**If a PR already exists** — update its body using `mcp__github__update_pull_request`:
+- owner: github_owner
+- repo: github_repo
+- pull_number: the existing PR number
+- body: use the template below
+
 Also delete any stale SQL files from the branch that no longer belong
 (i.e. files under src/sql/ that are NOT table_sql_filename or procedure_sql_filename).
-Use the GitHub API to list and delete them:
-```bash
-gh api repos/{github_owner}/{github_repo}/contents/src/sql \
-  --jq '.[] | select(.type=="file") | .path + " " + .sha'
-```
-For each file path that is not table_sql_filename or procedure_sql_filename, delete it:
-```bash
-gh api --method DELETE repos/{github_owner}/{github_repo}/contents/{stale_path} \
-  --field message="[{ticket_id}] Remove stale SQL file (replaced by split structure)" \
-  --field sha="{file_sha}" \
-  --field branch="feature/{ticket_id}"
-```
+Use `mcp__github__get_file_contents` to list files under src/sql/ on the branch,
+then for each stale file use `mcp__github__create_or_update_file` with empty content
+and a deletion commit message to remove it:
+- message: `[{ticket_id}] Remove stale SQL file (replaced by split structure)`
+- branch: feature/{ticket_id}
 
 Use this body template for both create and update:
 
@@ -170,7 +163,7 @@ Use the `jira` MCP tool to assign the ticket to the person who ran the skill.
 
 - Use `mcp__jira__jira_issues` with action `assign`
 - issueKey: {ticket_id}
-- assignee: value of `author` from defaults.json (this is their email, e.g. madhumithac@phdata.io)
+- assignee: value of `jira_email` from handoff JSON (e.g. madhumithac@phdata.io)
 
 If the assign call fails (user not found), report it but do not block — PR is already created.
 

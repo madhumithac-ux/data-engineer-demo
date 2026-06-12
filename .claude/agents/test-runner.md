@@ -20,7 +20,7 @@ The handoff JSON from code-generator, including:
 
 ## Step 1 — confirm files exist
 Before running anything, check all three files exist on disk using
-the `filesystem` MCP `read_file` tool:
+the built-in `Read` tool:
 - Read table_sql_filename — if missing, stop and report:
   "Table SQL file not found: {table_sql_filename}. code-generator may have failed."
 - Read procedure_sql_filename — if missing, stop and report:
@@ -29,15 +29,15 @@ the `filesystem` MCP `read_file` tool:
   "Test file not found: {test_filename}. code-generator may have failed."
 
 ## Step 2 — run pytest via bash
-Use the `bash` tool to run pytest:
+Use the `bash` tool to run pytest. Use `project_root` from the handoff JSON as the working directory:
 
 ```bash
-cd <project_root> && python -m pytest <test_filename> -v --tb=short 2>&1
+cd {project_root} && python -m pytest {test_filename} -v --tb=short 2>&1
 ```
 
 Example:
 ```bash
-python -m pytest tests/test_de42_ai_agent_test_table_2.py -v --tb=short 2>&1
+cd C:\Users\MadhumithaC\Projects\data-engineer-demo && python -m pytest tests/test_AI_AGENT_TEST_TABLE_2.py -v --tb=short 2>&1
 ```
 
 Flags explained:

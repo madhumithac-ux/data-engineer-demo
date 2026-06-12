@@ -30,7 +30,7 @@ It will return a structured handoff JSON block.
 
 ## Phase 2 — code-generator agent
 Spawn the `code-generator` agent with the handoff JSON from Phase 1.
-It will write three files using the filesystem MCP:
+It will write three files using the built-in Write tool:
 - src/sql/tables/<EXACT_TABLE_NAME>.sql
 - src/sql/procedures/<EXACT_PROCEDURE_NAME>.sql
 - tests/test_<EXACT_TABLE_NAME>.py
@@ -61,6 +61,7 @@ This block is passed between all agents:
   "ticket_id": "<TICKET-ID>",
   "ticket_title": "<short title from Jira>",
   "jira_url": "<from defaults.json>",
+  "role": "<role from ticket, e.g. DEV_SECREF_FR_ENGR_ROLE>",
   "schema": "<schema from ticket, default RAW>",
   "database": "<database from ticket>",
   "table_name": "<TABLE_NAME from ticket>",
@@ -79,9 +80,11 @@ This block is passed between all agents:
   "procedure_sql_filename": "src/sql/procedures/<EXACT_PROCEDURE_NAME>.sql",
   "test_filename": "tests/test_<EXACT_TABLE_NAME>.py",
   "author": "<from defaults.json>",
+  "jira_email": "<from defaults.json>",
   "github_owner": "<from defaults.json>",
   "github_repo": "<from defaults.json>",
-  "default_branch": "<from defaults.json>"
+  "default_branch": "<from defaults.json>",
+  "project_root": "<from defaults.json>"
 }
 ```
 
@@ -94,6 +97,6 @@ This block is passed between all agents:
 
 ## Error handling
 - Jira MCP fails → tell user to check JIRA_URL, JIRA_USERNAME, JIRA_API_TOKEN
-- Filesystem MCP fails → tell user to check the path in mcp config
+- File write fails → tell user to check that the src/sql/ and tests/ directories exist
 - GitHub MCP fails → tell user to check GITHUB_PERSONAL_ACCESS_TOKEN and repo name
 - Any phase fails → report clearly, do not attempt to continue silently

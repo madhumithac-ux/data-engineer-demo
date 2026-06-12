@@ -15,14 +15,16 @@ $data-engineer TICKET-ID
 Example: `$data-engineer DE-42`
 
 ## Agent pipeline
-1. jira-reader   → reads ticket via Jira MCP, extracts requirements
-2. code-generator → writes SQL + pytest file via Filesystem MCP
-3. pr-creator    → branch + commit + draft PR via GitHub MCP
-                   + comment PR link on Jira ticket
+1. jira-reader    → reads ticket via Jira MCP, extracts requirements
+2. code-generator → writes SQL + pytest file using built-in Write tool
+3. test-runner    → runs pytest locally, blocks pipeline if any test fails
+4. pr-creator     → branch + commit + draft PR via GitHub MCP
+                    + comment PR link, transition status, assign ticket on Jira
 
 ## Output files per ticket
-- src/sql/<ticket_id>_<object_name>.sql   — Snowflake DDL + DML
-- tests/test_<ticket_id>_<object_name>.py — pytest validation (no DB needed)
+- src/sql/tables/<EXACT_TABLE_NAME>.sql         — Snowflake CREATE OR REPLACE TABLE
+- src/sql/procedures/<EXACT_PROCEDURE_NAME>.sql — Snowflake stored procedure
+- tests/test_<EXACT_TABLE_NAME>.py              — pytest validation (no DB needed)
 
 ## Conventions
 - Branch:  feature/<TICKET-ID>
@@ -32,9 +34,8 @@ Example: `$data-engineer DE-42`
 - Never overwrite existing files without confirmation
 
 ## MCP servers required
-- jira       — read tickets, post comments
-- filesystem — write generated files to src/sql/ and tests/
-- github     — create branch, commit files, open draft PR
+- jira   — read tickets, post comments
+- github — create branch, commit files, open draft PR
 
 ## Config
 All settings in .claude/config/defaults.json (gitignored).

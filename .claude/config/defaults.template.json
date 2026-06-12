@@ -1,8 +1,10 @@
 {
   "author": "YOUR_NAME",
+  "jira_email": "YOUR_EMAIL@YOUR-ORG.com",
   "github_owner": "YOUR_GITHUB_USERNAME",
   "github_repo": "data-engineer-demo",
   "default_branch": "main",
   "jira_url": "https://YOUR-ORG.atlassian.net",
-  "jira_project_key": "YOUR_PROJECT_KEY"
+  "jira_project_key": "YOUR_PROJECT_KEY",
+  "project_root": "C:\\Users\\YOUR_USERNAME\\Projects\\data-engineer-demo"
 }

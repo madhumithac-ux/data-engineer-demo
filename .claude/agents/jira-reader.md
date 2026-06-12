@@ -87,9 +87,11 @@ Output ONLY this JSON block — the next agent parses it directly:
   "procedure_sql_filename": "src/sql/procedures/<EXACT_PROCEDURE_NAME>.sql",
   "test_filename": "tests/test_<EXACT_TABLE_NAME>.py",
   "author": "<from defaults.json>",
+  "jira_email": "<from defaults.json>",
   "github_owner": "<from defaults.json>",
   "github_repo": "<from defaults.json>",
-  "default_branch": "main"
+  "default_branch": "main",
+  "project_root": "<from defaults.json>"
 }
 ```
 

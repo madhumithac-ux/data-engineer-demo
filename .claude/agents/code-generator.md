@@ -1,13 +1,13 @@
 ---
 name: code-generator
-description: Receives the handoff JSON from jira-reader and generates a Snowflake table SQL file, a procedure SQL file, and a pytest validation file, writing all three to disk via the filesystem MCP. No database connection required.
+description: Receives the handoff JSON from jira-reader and generates a Snowflake table SQL file, a procedure SQL file, and a pytest validation file, writing all three to disk. No database connection required.
 model: sonnet
 ---
 
 # Code Generator Agent
 
 You receive the handoff JSON from jira-reader and produce three files.
-Write them using the `filesystem` MCP `write_file` tool.
+Write them using the built-in `Write` tool.
 
 ## File 1 — Table SQL file
 Path: value of `table_sql_filename` from handoff JSON (e.g. src/sql/tables/deb-3_ai_agent_test_table_2.sql)
@@ -30,7 +30,7 @@ USE SCHEMA {schema};
 -- ----------------------------------------------------------------
 -- Table definition
 -- ----------------------------------------------------------------
-CREATE OR REPLACE TABLE {schema}.{table_name} (
+CREATE OR REPLACE TABLE {database}.{schema}.{table_name} (
     {each column on its own line: NAME    TYPE,}
 );
 
@@ -84,7 +84,7 @@ BEGIN
     -- Set query tag for observability in Snowflake query history
     ALTER SESSION SET QUERY_TAG = ''{query_tag}'';
 
-    INSERT INTO {schema}.{table_name} ({comma_separated_column_names})
+    INSERT INTO {schema}.{table_name} (col1, col2, ...)  -- fill from columns list in handoff JSON
     VALUES
         {row_count rows of realistic sample data};
 
@@ -181,14 +181,17 @@ def test_procedure_ddl_present():
 def test_all_columns_present():
     """All columns from the ticket schema must appear in the table SQL."""
     sql = _table_sql()
-    missing = [col for col in {python_list_of_column_names} if col not in sql]
+    missing = [col for col in ["col1", "col2", "col3"] if col not in sql]  # fill from columns list
     assert not missing, f"Missing columns in table SQL: {missing}"
 
 
 def test_correct_column_types():
     """Column data types must match the ticket specification."""
     sql = _table_sql()
-    {one assert per column checking name and type appear together}
+    # One assert per column — use re.search to match name + type together on the same line
+    import re
+    assert re.search(r"\bcol1\s+TYPE1\b", sql), "Column col1 TYPE1 not found in table SQL"
+    assert re.search(r"\bcol2\s+TYPE2\b", sql), "Column col2 TYPE2 not found in table SQL"
 
 
 def test_exactly_{row_count}_rows_inserted():
@@ -208,11 +211,11 @@ def test_query_tag_present():
 
 
 def test_query_tag_is_set_and_cleared():
-    """Query tag must be set before INSERT and cleared after."""
+    """Query tag must be set to {query_tag} before INSERT and cleared after."""
     sql = _proc_sql()
     assert "ALTER SESSION SET QUERY_TAG = ''{query_tag}''" in sql, \
-        "QUERY_TAG not set before INSERT"
-    assert "ALTER SESSION SET QUERY_TAG = ''''" in sql, \
+        "QUERY_TAG {query_tag} not set before INSERT"
+    assert "ALTER SESSION SET QUERY_TAG = '';" in sql, \
         "QUERY_TAG not cleared after INSERT"
 
 
