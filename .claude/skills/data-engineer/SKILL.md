@@ -55,6 +55,11 @@ cd {project_root} && mkdir -p src/sql/tables src/sql/procedures tests
 
 If either command fails, stop and report the error — do not continue to Phase 2.
 
+If any later phase (2, 3, or 4) fails after this point:
+- The user will be left on branch feature/{ticket_id} with uncommitted files
+- Tell the user to run: `git checkout main` to return to main
+- Generated files can be inspected or deleted manually before retrying
+
 ## Phase 2 — code-generator agent
 Spawn the `code-generator` agent with the handoff JSON from Phase 1.
 It will write three files using the built-in Write tool:

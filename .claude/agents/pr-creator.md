@@ -123,13 +123,14 @@ Status: Ready for review — tests pass locally without DB connection.
 
 ## Step 5 — transition Jira status to "Peer Review"
 Use the `jira` MCP tool to move the ticket to Peer Review status.
+Look for tool names: `mcp__jira__jira_workflow`, `jira_workflow`, `jira_transition`
 
 First, fetch available transitions:
-- Use `mcp__jira__jira_workflow` with action `get_transitions` and issueKey: {ticket_id}
+- Use the tool with action `get_transitions` and issueKey: {ticket_id}
 - Find the transition whose name matches "Peer Review" (case-insensitive)
 
 Then execute the transition:
-- Use `mcp__jira__jira_workflow` with action `transition`
+- Use the tool with action `transition`
 - issueKey: {ticket_id}
 - transitionId: the ID found above
 
@@ -138,8 +139,9 @@ If none match, report which transitions are available and skip this step — do 
 
 ## Step 6 — assign Jira ticket to the author
 Use the `jira` MCP tool to assign the ticket to the person who ran the skill.
+Look for tool names: `mcp__jira__jira_issues`, `jira_issues`, `jira_assign`
 
-- Use `mcp__jira__jira_issues` with action `assign`
+- Use the tool with action `assign`
 - issueKey: {ticket_id}
 - assignee: value of `jira_email` from handoff JSON (e.g. madhumithac@phdata.io)
 
