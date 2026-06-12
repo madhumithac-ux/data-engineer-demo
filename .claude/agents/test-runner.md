@@ -102,20 +102,23 @@ then re-run $data-engineer {ticket_id}.
 ```
 
 ## Step 6 — pass results to pr-creator (only if all pass)
-If all tests pass, add the test results to the handoff JSON:
+Output the updated handoff JSON block immediately after the PASSED report above.
+This is what the orchestrator forwards to pr-creator — it must be a complete JSON block:
 
 ```json
 {
-  ...existing handoff JSON fields...,
+  ...all existing handoff JSON fields from code-generator, unchanged...,
   "test_results": {
     "status": "passed",
-    "total": 10,
-    "passed": 10,
+    "total": 13,
+    "passed": 13,
     "failed": 0,
     "duration_seconds": 0.12
   }
 }
 ```
+
+Both outputs are required: the human-readable PASSED report first, then this JSON block.
 
 ## Important rules
 - NEVER skip tests or mark them as expected failures to unblock the pipeline

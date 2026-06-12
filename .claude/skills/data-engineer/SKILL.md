@@ -30,8 +30,8 @@ It will return a structured handoff JSON block.
 
 ## Phase 1.5 — validate handoff JSON
 Before spawning code-generator, verify the handoff JSON from Phase 1 contains:
-- `table_name` — not null, not empty
-- `procedure_name` — not null, not empty
+- `table_name` — not null and not whitespace-only
+- `procedure_name` — not null and not whitespace-only
 - `columns` — non-empty list
 - `row_count` — positive integer
 - `table_sql_filename`, `procedure_sql_filename`, `test_filename` — all set
@@ -108,7 +108,7 @@ This block is passed between all agents:
 - If ticket requirements are unclear, ask the user before generating code
 
 ## Error handling
-- Jira MCP fails → tell user to check JIRA_URL, JIRA_USERNAME, JIRA_API_TOKEN
+- Jira MCP fails → tell user to check JIRA_BASE_URL, JIRA_EMAIL, JIRA_API_TOKEN
 - File write fails → tell user to check that the src/sql/ and tests/ directories exist
 - GitHub MCP fails → tell user to check GITHUB_PERSONAL_ACCESS_TOKEN and repo name
 - Any phase fails → report clearly, do not attempt to continue silently

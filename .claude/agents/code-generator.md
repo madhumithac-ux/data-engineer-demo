@@ -9,6 +9,17 @@ model: sonnet
 You receive the handoff JSON from jira-reader and produce three files.
 Write them using the built-in `Write` tool.
 
+## Step 0 — validate input
+Before generating any files, verify:
+- `table_name` is a non-empty, non-whitespace string (not null)
+- `procedure_name` is a non-empty, non-whitespace string (not null)
+- `columns` is a non-empty list
+- `row_count` is a positive integer (> 0)
+- Each column name contains only letters, digits, and underscores
+
+If any check fails, stop immediately and report:
+`Cannot generate code: {field} is invalid — {reason}`
+
 ## File 1 — Table SQL file
 Path: value of `table_sql_filename` from handoff JSON (e.g. src/sql/tables/AI_AGENT_TEST_TABLE_2.sql)
 
@@ -82,9 +93,10 @@ DECLARE
     rows_inserted NUMBER := 0;
 BEGIN
     -- Set query tag for observability in Snowflake query history
+    -- If query_tag is null in the handoff JSON, omit this line entirely
     ALTER SESSION SET QUERY_TAG = ''{query_tag}'';
 
-    INSERT INTO {schema}.{table_name} (col1, col2, ...)  -- fill from columns list in handoff JSON
+    INSERT INTO {schema}.{table_name} (COL1, COL2, COL3)  -- expand to ALL column names from handoff JSON in order
     VALUES
         {row_count rows of realistic sample data};
 
@@ -117,11 +129,12 @@ END;
 
 ### Sample data rules
 - Generate exactly `row_count` rows of VALUES
-- Row 1 always has ID=1 (or first numeric PK = 1)
+- If a numeric PK column exists, start at 1 and increment per row; if no numeric PK, use meaningful strings
 - Use realistic names: Alice, Bob, Charlie, Diana, Eve, Frank, Grace, Hank, Ivy, Jack...
 - FLOAT/NUMBER columns: use values like 100.50, 250.75, 320.00 — not 1.0, 2.0
 - VARCHAR columns: meaningful short strings, not "value1", "value2"
 - Each VALUES row ends with a comma EXCEPT the last row
+- Each VALUES row must be on its own single line — the row-count test matches line by line
 
 ---
 
@@ -256,6 +269,12 @@ def test_procedure_validation_queries_present():
     assert "QUERY_HISTORY" in sql
 ```
 
+## Error handling
+- Write tool fails → stop immediately and report which file failed with the exact error
+- `query_tag` is null → omit both `ALTER SESSION SET QUERY_TAG` lines from the procedure; also remove `test_query_tag_present` and `test_query_tag_is_set_and_cleared` from the test file
+- `row_count` ≤ 0 or missing → stop: "row_count must be a positive integer"
+- `columns` is empty → stop: "columns list is empty — cannot generate table or procedure"
+
 ## Rules
 - Fill ALL placeholders — no `{curly braces}` left in any output file
 - This applies everywhere: SQL body, Python string literals, assert messages, docstrings, and f-strings
@@ -264,11 +283,14 @@ def test_procedure_validation_queries_present():
 - `{query_tag}` inside assert strings must be the actual tag value: `assert "MY_TAG" in _proc_sql()`
 - `["COL1", "COL2", "COL3"]` → actual column name list from handoff JSON: `["ID", "NAME", "AMOUNT"]`
 - Column type asserts → one per column with real name+type: `re.search(r"\bID\s+INT\b", sql)`
-- After writing all three files, output:
+- After writing all three files, output BOTH of the following blocks — test-runner needs the JSON:
   ```
   Files written:
   - {table_sql_filename}
   - {procedure_sql_filename}
   - {test_filename}
+  ```
+  ```json
+  { ...complete handoff JSON from input, all fields unchanged... }
   ```
 - Do NOT add TODO comments or leave template placeholder text in output files

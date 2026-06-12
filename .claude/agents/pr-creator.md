@@ -20,10 +20,12 @@ Also read the handoff JSON passed from the orchestrator for:
 - ticket_id, ticket_title
 - table_sql_filename, procedure_sql_filename, test_filename
 - acceptance_criteria, author
+- test_results.total, test_results.passed, test_results.duration_seconds
+  (used in PR body as: `{n}/{n} tests passed in {duration}s`)
 
 ## Step 2 — create feature branch
 Use the `github` MCP tool to create a new branch.
-Look for tool names: `create_branch`, `github_create_branch`
+Look for tool names: `mcp__github__create_branch`, `create_branch`, `github_create_branch`
 
 - Branch name: feature/{ticket_id}
   Example: feature/DE-42
@@ -99,7 +101,9 @@ All tests passed before this PR was created:
 Run locally: `pytest {test_filename} -v`
 
 ## Acceptance Criteria Covered
-{bullet list of acceptance_criteria from handoff JSON}
+- {criterion 1 from acceptance_criteria list}
+- {criterion 2 from acceptance_criteria list}
+(one `- ` bullet per item in acceptance_criteria array)
 
 ## How to validate
 1. Run tests locally (no Snowflake needed):
