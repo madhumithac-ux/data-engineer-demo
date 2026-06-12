@@ -16,7 +16,7 @@ Example: `$data-engineer DE-42`
 
 ## Agent pipeline
 1. jira-reader    → reads ticket via Jira MCP, extracts requirements
-2. code-generator → writes SQL + pytest file using built-in Write tool
+2. code-generator → writes SQL + two pytest files using built-in Write tool
 3. test-runner    → runs pytest locally, blocks pipeline if any test fails
 4. pr-creator     → git commit + push, open draft PR via GitHub MCP
                     + comment PR link, transition status, assign ticket on Jira
@@ -24,7 +24,8 @@ Example: `$data-engineer DE-42`
 ## Output files per ticket
 - src/sql/tables/<EXACT_TABLE_NAME>.sql         — Snowflake CREATE OR REPLACE TABLE
 - src/sql/procedures/<EXACT_PROCEDURE_NAME>.sql — Snowflake stored procedure
-- tests/test_<EXACT_TABLE_NAME>.py              — pytest validation (no DB needed)
+- tests/test_<EXACT_TABLE_NAME>.py              — pytest table validation (no DB needed)
+- tests/test_<EXACT_PROCEDURE_NAME>.py          — pytest procedure validation (no DB needed)
 
 ## Conventions
 - Branch:  feature/<TICKET-ID>

@@ -20,6 +20,7 @@ $data-engineer DE-42
  code-generator   writes src/sql/tables/<TABLE>.sql via built-in Write tool
       │            writes src/sql/procedures/<PROC>.sql via built-in Write tool
       │            writes tests/test_<TABLE>.py via built-in Write tool
+      │            writes tests/test_<PROC>.py via built-in Write tool
       ▼
  pr-creator       git commit + push to feature branch
                    opens draft PR via GitHub MCP
@@ -137,18 +138,19 @@ pytest tests/ -v
 Expected output (example for ticket DEB-42):
 ```
 tests/test_MY_TABLE.py::test_table_sql_file_exists              PASSED
-tests/test_MY_TABLE.py::test_procedure_sql_file_exists          PASSED
 tests/test_MY_TABLE.py::test_table_ddl_present                  PASSED
-tests/test_MY_TABLE.py::test_procedure_ddl_present              PASSED
 tests/test_MY_TABLE.py::test_all_columns_present                PASSED
 tests/test_MY_TABLE.py::test_correct_column_types               PASSED
-tests/test_MY_TABLE.py::test_exactly_10_rows_inserted           PASSED
-tests/test_MY_TABLE.py::test_query_tag_present                  PASSED
-tests/test_MY_TABLE.py::test_query_tag_is_set_and_cleared       PASSED
 tests/test_MY_TABLE.py::test_no_unsafe_drop_in_table_sql        PASSED
-tests/test_MY_TABLE.py::test_no_unsafe_drop_in_procedure_sql    PASSED
 tests/test_MY_TABLE.py::test_table_validation_queries_present   PASSED
-tests/test_MY_TABLE.py::test_procedure_validation_queries_present PASSED
+
+tests/test_MY_PROCEDURE.py::test_procedure_sql_file_exists      PASSED
+tests/test_MY_PROCEDURE.py::test_procedure_ddl_present          PASSED
+tests/test_MY_PROCEDURE.py::test_exactly_10_rows_inserted       PASSED
+tests/test_MY_PROCEDURE.py::test_query_tag_present              PASSED
+tests/test_MY_PROCEDURE.py::test_query_tag_is_set_and_cleared   PASSED
+tests/test_MY_PROCEDURE.py::test_no_unsafe_drop_in_procedure_sql PASSED
+tests/test_MY_PROCEDURE.py::test_procedure_validation_queries_present PASSED
 
 13 passed in 0.12s
 ```

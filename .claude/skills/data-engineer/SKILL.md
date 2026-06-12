@@ -62,10 +62,11 @@ If any later phase (2, 3, or 4) fails after this point:
 
 ## Phase 2 — code-generator agent
 Spawn the `code-generator` agent with the handoff JSON from Phase 1.
-It will write three files using the built-in Write tool:
+It will write four files using the built-in Write tool:
 - src/sql/tables/<EXACT_TABLE_NAME>.sql
 - src/sql/procedures/<EXACT_PROCEDURE_NAME>.sql
 - tests/test_<EXACT_TABLE_NAME>.py
+- tests/test_<EXACT_PROCEDURE_NAME>.py
 
 ## Phase 3 — test-runner agent
 Spawn the `test-runner` agent with the handoff JSON from Phase 2.
@@ -112,6 +113,7 @@ This block is passed between all agents:
   "table_sql_filename": "src/sql/tables/<EXACT_TABLE_NAME>.sql",
   "procedure_sql_filename": "src/sql/procedures/<EXACT_PROCEDURE_NAME>.sql",
   "test_filename": "tests/test_<EXACT_TABLE_NAME>.py",
+  "procedure_test_filename": "tests/test_<EXACT_PROCEDURE_NAME>.py",
   "author": "<from defaults.json>",
   "jira_email": "<from defaults.json>",
   "github_owner": "<from defaults.json>",

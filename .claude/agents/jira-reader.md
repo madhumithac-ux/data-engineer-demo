@@ -50,14 +50,16 @@ stated in the ticket, set it to null and note it — do not make one up.
 Filenames use the EXACT object name from the ticket — same casing, no ticket prefix.
 The folder (tables/ or procedures/) already provides the context.
 
-- table_sql_filename:     src/sql/tables/<EXACT_TABLE_NAME>.sql
-- procedure_sql_filename: src/sql/procedures/<EXACT_PROCEDURE_NAME>.sql
-- test_filename:          tests/test_<EXACT_TABLE_NAME>.py
+- table_sql_filename:          src/sql/tables/<EXACT_TABLE_NAME>.sql
+- procedure_sql_filename:      src/sql/procedures/<EXACT_PROCEDURE_NAME>.sql
+- test_filename:               tests/test_<EXACT_TABLE_NAME>.py
+- procedure_test_filename:     tests/test_<EXACT_PROCEDURE_NAME>.py
 
 Examples (if ticket says AI_AGENT_TEST_TABLE_2 and P_FILL_AI_AGENT_TEST_TABLE_2):
-- table_sql_filename:     src/sql/tables/AI_AGENT_TEST_TABLE_2.sql
-- procedure_sql_filename: src/sql/procedures/P_FILL_AI_AGENT_TEST_TABLE_2.sql
-- test_filename:          tests/test_AI_AGENT_TEST_TABLE_2.py
+- table_sql_filename:          src/sql/tables/AI_AGENT_TEST_TABLE_2.sql
+- procedure_sql_filename:      src/sql/procedures/P_FILL_AI_AGENT_TEST_TABLE_2.sql
+- test_filename:               tests/test_AI_AGENT_TEST_TABLE_2.py
+- procedure_test_filename:     tests/test_P_FILL_AI_AGENT_TEST_TABLE_2.py
 
 ## Step 4 — output the handoff JSON
 Output ONLY this JSON block — the next agent parses it directly:
@@ -86,6 +88,7 @@ Output ONLY this JSON block — the next agent parses it directly:
   "table_sql_filename": "src/sql/tables/<EXACT_TABLE_NAME>.sql",
   "procedure_sql_filename": "src/sql/procedures/<EXACT_PROCEDURE_NAME>.sql",
   "test_filename": "tests/test_<EXACT_TABLE_NAME>.py",
+  "procedure_test_filename": "tests/test_<EXACT_PROCEDURE_NAME>.py",
   "author": "<from defaults.json>",
   "jira_email": "<from defaults.json>",
   "github_owner": "<from defaults.json>",
@@ -113,6 +116,7 @@ The output JSON would have:
 - columns: [{"name":"ID","type":"INT"},{"name":"Name","type":"VARCHAR"},{"name":"Amount","type":"FLOAT"}]
 - row_count: 10
 - query_tag: "AI_AGENT_POPULATION_PROC"
-- table_sql_filename: "src/sql/tables/AI_AGENT_TEST_TABLE_2.sql"
-- procedure_sql_filename: "src/sql/procedures/P_FILL_AI_AGENT_TEST_TABLE_2.sql"
-- test_filename: "tests/test_AI_AGENT_TEST_TABLE_2.py"
+- table_sql_filename:      "src/sql/tables/AI_AGENT_TEST_TABLE_2.sql"
+- procedure_sql_filename:  "src/sql/procedures/P_FILL_AI_AGENT_TEST_TABLE_2.sql"
+- test_filename:           "tests/test_AI_AGENT_TEST_TABLE_2.py"
+- procedure_test_filename: "tests/test_P_FILL_AI_AGENT_TEST_TABLE_2.py"

@@ -12,32 +12,35 @@ pr-creator must NOT run until all tests pass.
 
 ## What you receive
 The handoff JSON from code-generator, including:
-- test_filename           — path to the pytest file
-- table_sql_filename      — path to the table DDL SQL file
-- procedure_sql_filename  — path to the procedure SQL file
-- ticket_id               — for reporting
-- acceptance_criteria     — so you can map failures back to ticket requirements
+- test_filename               — path to the table pytest file
+- procedure_test_filename     — path to the procedure pytest file
+- table_sql_filename          — path to the table DDL SQL file
+- procedure_sql_filename      — path to the procedure SQL file
+- ticket_id                   — for reporting
+- acceptance_criteria         — so you can map failures back to ticket requirements
 
 ## Step 1 — confirm files exist
-Before running anything, check all three files exist on disk using
+Before running anything, check all four files exist on disk using
 the built-in `Read` tool:
 - Read table_sql_filename — if missing, stop and report:
   "Table SQL file not found: {table_sql_filename}. code-generator may have failed."
 - Read procedure_sql_filename — if missing, stop and report:
   "Procedure SQL file not found: {procedure_sql_filename}. code-generator may have failed."
 - Read test_filename — if missing, stop and report:
-  "Test file not found: {test_filename}. code-generator may have failed."
+  "Table test file not found: {test_filename}. code-generator may have failed."
+- Read procedure_test_filename — if missing, stop and report:
+  "Procedure test file not found: {procedure_test_filename}. code-generator may have failed."
 
 ## Step 2 — run pytest via bash
-Use the `bash` tool to run pytest. Use `project_root` from the handoff JSON as the working directory:
+Use the `bash` tool to run all tests in the tests/ directory. Use `project_root` from the handoff JSON as the working directory:
 
 ```bash
-cd {project_root} && python -m pytest {test_filename} -v --tb=short 2>&1
+cd {project_root} && python -m pytest tests/ -v --tb=short 2>&1
 ```
 
 Example:
 ```bash
-cd C:\Users\MadhumithaC\Projects\data-engineer-demo && python -m pytest tests/test_AI_AGENT_TEST_TABLE_2.py -v --tb=short 2>&1
+cd C:\Users\MadhumithaC\Projects\data-engineer-demo && python -m pytest tests/ -v --tb=short 2>&1
 ```
 
 Flags explained:
@@ -72,7 +75,8 @@ If any test fails, map it to the relevant acceptance criterion:
 Test Results: PASSED
 
 Ticket  : {ticket_id}
-File    : {test_filename}
+Files   : {test_filename}
+          {procedure_test_filename}
 Results : {n}/{n} tests passed
 
 {full pytest -v output}
@@ -85,7 +89,8 @@ Pipeline status: READY — pr-creator can proceed.
 Test Results: FAILED — pipeline blocked
 
 Ticket  : {ticket_id}
-File    : {test_filename}
+Files   : {test_filename}
+          {procedure_test_filename}
 Results : {passed}/{total} tests passed, {failed} failed
 
 Failed tests:
@@ -113,7 +118,9 @@ This is what the orchestrator forwards to pr-creator — it must be a complete J
     "total": 13,
     "passed": 13,
     "failed": 0,
-    "duration_seconds": 0.12
+    "duration_seconds": 0.12,
+    "table_tests": 6,
+    "procedure_tests": 7
   }
 }
 ```
@@ -126,4 +133,4 @@ Both outputs are required: the human-readable PASSED report first, then this JSO
 - NEVER modify the SQL file without telling the user what changed and why
 - If pytest is not installed, run: `pip install pytest` then retry
 - If the bash tool is unavailable, report this clearly and ask the user
-  to run pytest manually: `pytest {test_filename} -v`
+  to run pytest manually: `pytest tests/ -v`

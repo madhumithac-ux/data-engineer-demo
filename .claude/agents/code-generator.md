@@ -1,12 +1,12 @@
 ---
 name: code-generator
-description: Receives the handoff JSON from jira-reader and generates a Snowflake table SQL file, a procedure SQL file, and a pytest validation file, writing all three to disk. No database connection required.
+description: Receives the handoff JSON from jira-reader and generates a Snowflake table SQL file, a procedure SQL file, and two pytest validation files (one per object), writing all four to disk. No database connection required.
 model: sonnet
 ---
 
 # Code Generator Agent
 
-You receive the handoff JSON from jira-reader and produce three files.
+You receive the handoff JSON from jira-reader and produce four files.
 Write them using the built-in `Write` tool.
 
 ## Step 0 — validate input
@@ -138,27 +138,22 @@ END;
 
 ---
 
-## File 3 — Pytest file
-Path: value of `test_filename` from handoff JSON
+## File 3 — Table test file
+Path: value of `test_filename` from handoff JSON (e.g. tests/test_AI_AGENT_TEST_TABLE_2.py)
 
 ```python
 """
-Validation tests for {ticket_id} — {ticket_title}
+Table validation tests for {ticket_id} — {ticket_title}
 
-Tests verify generated SQL files are correct WITHOUT a live Snowflake connection.
-
-Acceptance criteria from the Jira ticket:
-{numbered list of acceptance_criteria}
+Tests verify the generated table SQL file is correct WITHOUT a live Snowflake connection.
 
 Run with: pytest {test_filename} -v
 """
 from pathlib import Path
 import re
 
-# Paths are relative to this test file's location so they work on any machine
 _ROOT = Path(__file__).resolve().parent.parent
 TABLE_SQL_FILE = _ROOT / "{table_sql_filename}"
-PROCEDURE_SQL_FILE = _ROOT / "{procedure_sql_filename}"
 
 
 def test_table_sql_file_exists():
@@ -166,30 +161,14 @@ def test_table_sql_file_exists():
     assert TABLE_SQL_FILE.exists(), f"Table SQL file not found: {TABLE_SQL_FILE}"
 
 
-def test_procedure_sql_file_exists():
-    """Procedure SQL file must exist on disk."""
-    assert PROCEDURE_SQL_FILE.exists(), f"Procedure SQL file not found: {PROCEDURE_SQL_FILE}"
-
-
 def _table_sql():
     return TABLE_SQL_FILE.read_text(encoding="utf-8")
-
-
-def _proc_sql():
-    return PROCEDURE_SQL_FILE.read_text(encoding="utf-8")
 
 
 def test_table_ddl_present():
     """AC: Table {table_name} must be defined in schema {schema}."""
     assert "CREATE OR REPLACE TABLE {schema}.{table_name}" in _table_sql(), (
         "CREATE TABLE statement for {schema}.{table_name} not found"
-    )
-
-
-def test_procedure_ddl_present():
-    """AC: Procedure {procedure_name} must exist."""
-    assert "CREATE OR REPLACE PROCEDURE {schema}.{procedure_name}" in _proc_sql(), (
-        "CREATE PROCEDURE statement for {procedure_name} not found"
     )
 
 
@@ -210,14 +189,61 @@ def test_correct_column_types():
     # e.g. for {"name":"ID","type":"INT"} and {"name":"NAME","type":"VARCHAR"}:
     #   assert re.search(r"\bID\s+INT\b", sql), "Column ID INT not found in table SQL"
     #   assert re.search(r"\bNAME\s+VARCHAR\b", sql), "Column NAME VARCHAR not found in table SQL"
-    import re
     assert re.search(r"\bCOL1\s+TYPE1\b", sql), "Column COL1 TYPE1 not found in table SQL"
     assert re.search(r"\bCOL2\s+TYPE2\b", sql), "Column COL2 TYPE2 not found in table SQL"
 
 
+def test_no_unsafe_drop_in_table_sql():
+    """Table SQL must not contain DROP without IF EXISTS."""
+    unsafe = re.findall(r"\bDROP\s+\w+\s+(?!IF\s+EXISTS\b)", _table_sql(), re.IGNORECASE)
+    assert not unsafe, f"Unsafe DROP in table SQL (missing IF EXISTS): {unsafe}"
+
+
+def test_table_validation_queries_present():
+    """Table validation queries must be present as comments."""
+    sql = _table_sql()
+    assert "DESC TABLE" in sql
+    assert "SELECT COUNT(*)" in sql
+```
+
+---
+
+## File 4 — Procedure test file
+Path: value of `procedure_test_filename` from handoff JSON (e.g. tests/test_P_FILL_AI_AGENT_TEST_TABLE_2.py)
+
+```python
+"""
+Procedure validation tests for {ticket_id} — {ticket_title}
+
+Tests verify the generated procedure SQL file is correct WITHOUT a live Snowflake connection.
+
+Run with: pytest {procedure_test_filename} -v
+"""
+from pathlib import Path
+import re
+
+_ROOT = Path(__file__).resolve().parent.parent
+PROCEDURE_SQL_FILE = _ROOT / "{procedure_sql_filename}"
+
+
+def test_procedure_sql_file_exists():
+    """Procedure SQL file must exist on disk."""
+    assert PROCEDURE_SQL_FILE.exists(), f"Procedure SQL file not found: {PROCEDURE_SQL_FILE}"
+
+
+def _proc_sql():
+    return PROCEDURE_SQL_FILE.read_text(encoding="utf-8")
+
+
+def test_procedure_ddl_present():
+    """AC: Procedure {procedure_name} must exist."""
+    assert "CREATE OR REPLACE PROCEDURE {schema}.{procedure_name}" in _proc_sql(), (
+        "CREATE PROCEDURE statement for {procedure_name} not found"
+    )
+
+
 def test_exactly_{row_count}_rows_inserted():  # ← substitute actual integer, e.g. def test_exactly_10_rows_inserted()
     """AC: Procedure must insert exactly {row_count} rows."""
-    # Counts VALUES rows regardless of column types by matching lines of the form ( ... ),
     rows = re.findall(r"^\s*\(.*\)\s*,?\s*$", _proc_sql(), re.MULTILINE)
     assert len(rows) == {row_count}, (
         f"Expected {row_count} INSERT rows, found {len(rows)}. "
@@ -227,7 +253,7 @@ def test_exactly_{row_count}_rows_inserted():  # ← substitute actual integer, 
 
 def test_query_tag_present():
     """AC: INSERT must be tagged with {query_tag} for observability."""
-    # {query_tag} must be the actual tag value from handoff JSON, not the literal placeholder
+    # {query_tag} must be the actual tag value from handoff JSON
     # e.g. assert "AI_AGENT_POPULATION_PROC" in _proc_sql()
     assert "{query_tag}" in _proc_sql(), (
         "Query tag {query_tag} not found in procedure SQL"
@@ -237,7 +263,6 @@ def test_query_tag_present():
 def test_query_tag_is_set_and_cleared():
     """Query tag must be set to {query_tag} before INSERT and cleared after."""
     sql = _proc_sql()
-    # {query_tag} must be the actual tag value from handoff JSON
     # e.g. assert "ALTER SESSION SET QUERY_TAG = ''AI_AGENT_POPULATION_PROC''" in sql
     assert "ALTER SESSION SET QUERY_TAG = ''{query_tag}''" in sql, \
         "QUERY_TAG {query_tag} not set before INSERT"
@@ -245,23 +270,10 @@ def test_query_tag_is_set_and_cleared():
         "QUERY_TAG not cleared after INSERT"
 
 
-def test_no_unsafe_drop_in_table_sql():
-    """Table SQL must not contain DROP without IF EXISTS."""
-    unsafe = re.findall(r"\bDROP\s+\w+\s+(?!IF\s+EXISTS\b)", _table_sql(), re.IGNORECASE)
-    assert not unsafe, f"Unsafe DROP in table SQL (missing IF EXISTS): {unsafe}"
-
-
 def test_no_unsafe_drop_in_procedure_sql():
     """Procedure SQL must not contain DROP without IF EXISTS."""
     unsafe = re.findall(r"\bDROP\s+\w+\s+(?!IF\s+EXISTS\b)", _proc_sql(), re.IGNORECASE)
     assert not unsafe, f"Unsafe DROP in procedure SQL (missing IF EXISTS): {unsafe}"
-
-
-def test_table_validation_queries_present():
-    """Table validation queries must be present as comments."""
-    sql = _table_sql()
-    assert "DESC TABLE" in sql
-    assert "SELECT COUNT(*)" in sql
 
 
 def test_procedure_validation_queries_present():
@@ -273,7 +285,7 @@ def test_procedure_validation_queries_present():
 
 ## Error handling
 - Write tool fails → stop immediately and report which file failed with the exact error
-- `query_tag` is null → omit both `ALTER SESSION SET QUERY_TAG` lines from the procedure; also remove `test_query_tag_present` and `test_query_tag_is_set_and_cleared` from the test file
+- `query_tag` is null → omit both `ALTER SESSION SET QUERY_TAG` lines from the procedure; also remove `test_query_tag_present` and `test_query_tag_is_set_and_cleared` from the procedure test file
 - `row_count` ≤ 0 or missing → stop: "row_count must be a positive integer"
 - `columns` is empty → stop: "columns list is empty — cannot generate table or procedure"
 
@@ -285,12 +297,13 @@ def test_procedure_validation_queries_present():
 - `{query_tag}` inside assert strings must be the actual tag value: `assert "MY_TAG" in _proc_sql()`
 - `["COL1", "COL2", "COL3"]` → actual column name list from handoff JSON: `["ID", "NAME", "AMOUNT"]`
 - Column type asserts → one per column with real name+type: `re.search(r"\bID\s+INT\b", sql)`
-- After writing all three files, output BOTH of the following blocks — test-runner needs the JSON:
+- After writing all four files, output BOTH of the following blocks — test-runner needs the JSON:
   ```
   Files written:
   - {table_sql_filename}
   - {procedure_sql_filename}
   - {test_filename}
+  - {procedure_test_filename}
   ```
   ```json
   { ...complete handoff JSON from input, all fields unchanged... }
